@@ -45,7 +45,7 @@ jobs:
         echo "DATE=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
     - name: Build Firmware
       env:
-        TNAME: K2P
+        TNAME: RM2100
         KERNEL: 3.4
       run: |
         cd /opt/rt-n56u/trunk
