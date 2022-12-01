@@ -32,7 +32,9 @@ jobs:
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
     - name: Clone source code
       env:
+        TNAME: RM2100
         KERNEL: 4.4
+        MHZ: 1100               # CPU超频频率 必须为20的倍数。开启超频请修改124行超频选项
       run: |
         if [ $KERNEL = "4.4" ] ; then
         git clone --depth=1 https://github.com/MeIsReallyBa/padavan-4.4.git /opt/rt-n56u
@@ -44,18 +46,21 @@ jobs:
         mkdir -p /opt/images/
         echo "DATE=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
     - name: Build Firmware
-      env:
-        TNAME: RM2100
-        KERNEL: 3.4
-        MHZ: 1100               # CPU超频频率 必须为20的倍数。开启超频请修改124行超频选项
+      # env:
+      # KERNEL: 3.4
       run: |
         cd /opt/rt-n56u/trunk
         echo "CPU超频到$MHZ"mhz
         echo "修改CPU频率"
         clock=`echo "obase=16 ; ibase=10 ; (((($MHZ/20)-1)*16+2))" | bc`
         echo "16进制$clock"
+        if [ $KERNEL = "4.4" ] ; then
+        sed -i "554,555s:0xff:0x7ff:g" /opt/rt-n56u/trunk/linux-4.4.x/arch/mips/rt2880/init.c
+        sed -i "554,556s:0xc2:0x$clock:g" /opt/rt-n56u/trunk/linux-4.4.x/arch/mips/rt2880/init.c
+        else
         sed -i "554,555s:0xff:0x7ff:g" /opt/rt-n56u/trunk/linux-3.4.x/arch/mips/rt2880/init.c
         sed -i "554,556s:0xc2:0x$clock:g" /opt/rt-n56u/trunk/linux-3.4.x/arch/mips/rt2880/init.c
+        fi
         if [ ! -f configs/templates/$TNAME.config ] ; then
         echo "configs/templates/$TNAME.config not found "
         exit 1
