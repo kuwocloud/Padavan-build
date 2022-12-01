@@ -32,9 +32,7 @@ jobs:
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev wget
     - name: Clone source code
       env:
-        TNAME: RM2100
         KERNEL: 4.4
-        MHZ: 1100               # CPU超频频率 必须为20的倍数。开启超频请修改124行超频选项
       run: |
         if [ $KERNEL = "4.4" ] ; then
         git clone --depth=1 https://github.com/MeIsReallyBa/padavan-4.4.git /opt/rt-n56u
@@ -46,8 +44,10 @@ jobs:
         mkdir -p /opt/images/
         echo "DATE=$(date "+%Y-%m-%d")" >> $GITHUB_ENV
     - name: Build Firmware
-      # env:
-      # KERNEL: 3.4
+      env:
+        TNAME: RM2100
+        KERNEL: 4.4
+        MHZ: 1100               # CPU超频频率 必须为20的倍数。开启超频请修改124行超频选项
       run: |
         cd /opt/rt-n56u/trunk
         echo "CPU超频到$MHZ"mhz
