@@ -128,3 +128,27 @@ jobs:
       with:
         name: Padavan-packages
         path: /opt/images
+
+    - name: Upload to release
+      uses: ncipollo/release-action@v1
+      with:
+        name: R${{ env.DATE }} for Padavan
+        artifacts: ${{ env.FILE_PATH }}/*.trx
+        allowUpdates: true
+        tag: R${{ env.DATE }}
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Delete workflow runs
+      uses: GitRML/delete-workflow-runs@main
+      with:
+        retain_days: 3
+        keep_minimum_runs: 0
+
+    - name: Remove old releases
+      uses: dev-drprasad/delete-older-releases@v0.2.0
+      with:
+        keep_latest: 3
+        delete_tags: true
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
