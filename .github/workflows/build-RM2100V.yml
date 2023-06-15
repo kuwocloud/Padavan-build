@@ -83,7 +83,6 @@ jobs:
         TNAME: "${{ github.event.inputs.production }}"
         MHZ: 1100               # CPU超频频率 必须为20的倍数
       run: |
-        cp -f public/adguardhome.sh ${{ env.DIR }}/trunk/user/adguardhome
         cwd=`pwd`
         CONFIG_TOOLCHAIN_DIR=${cwd//\//\\\/}\\/toolchain-mipsel
         cd ${{ env.DIR }}/trunk
