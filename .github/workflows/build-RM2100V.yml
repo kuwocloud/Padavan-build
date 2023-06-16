@@ -22,6 +22,11 @@ jobs:
       with:
         key: ${{ github.event.inputs.production }}
         append-timestamp: false
+    - uses: actions/setup-go@v4
+      with:
+        go-version: '1.21'
+        check-latest: true
+        cache-dependency-path: '**/go.sum'
     - name: 生成版本号
       run: |
         whoami
