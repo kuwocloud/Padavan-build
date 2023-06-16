@@ -39,7 +39,7 @@ jobs:
         
     - name: Clone source code
       run: |
-        git clone -b main --depth=1 https://github.com/monw/Padavan-KVR.git /opt/rt-n56u
+        git clone -b main --depth=1 https://github.com/Jisucloud/Padavan-KVR.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
