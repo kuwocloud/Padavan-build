@@ -1,17 +1,18 @@
 #修改TNAME: K2P-5.0 中的K2P-5.0为你需要编译的型号，注意名称要与configs/templates/目录下的名字相同
 name: Build RM2100 monw-Padavan-KVR
 
-on:
-  workflow_dispatch:
-    inputs:
-      production:
-        description: 设置编译的固件型号,空格分隔.
-        default: "RM2100"
-        required: false
-      release:
-        description: "是否需要发布到Release? (不发布也可以到Artifacts下载)"
-        default: 'yes'
-        required: false   
+on: 
+  release:
+    types: [published]
+  push:
+    tags:
+    - 'v*'
+  #  branches: 
+  #    - master
+#  schedule:
+#    - cron: 0 8 * * 5
+  watch:
+    types: [started]
 jobs:
   build:
     runs-on: ubuntu-20.04
