@@ -13,6 +13,7 @@ on:
 #    - cron: 0 8 * * 5
   watch:
     types: [started]
+
 jobs:
   build:
     runs-on: ubuntu-20.04
@@ -29,7 +30,6 @@ jobs:
         sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
         cpio git python-docutils gettext automake autopoint texinfo build-essential help2man \
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev gcc-multilib libssl-dev python
-
     - name: Clone source code
       run: |
         git clone -b main --depth=1 https://github.com/keke1023/Padavan.git /opt/rt-n56u
@@ -39,8 +39,8 @@ jobs:
     - name: Build Firmware
       env:
         TNAME: RM2100
-        MHZ: 1100               # CPU超频频率 必须为20的倍数
-      run: |
+	MHZ: 1100               # CPU超频频率 必须为20的倍数						  
+	run: |
         cwd=`pwd`
         CONFIG_TOOLCHAIN_DIR=${cwd//\//\\\/}\\/toolchain-mipsel
         cd /opt/rt-n56u/trunk
@@ -71,8 +71,8 @@ jobs:
         sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPS/d' .config #删除配置项FRPS
         sed -i '/CONFIG_FIRMWARE_INCLUDE_TUNSAFE/d' .config #删除配置项TUNSAFE
         sed -i '/CONFIG_FIRMWARE_INCLUDE_ALIDDNS/d' .config #删除配置项阿里DDNS
-		sed -i '/CONFIG_FIRMWARE_INCLUDE_SMARTDNS/d' .config #删除配置项SMARTDNS 
         sed -i '/CONFIG_FIRMWARE_CPU_900MHZ/d' .config #删除配置项超频900MHz
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMARTDNS/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_SSOBFS/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_SRELAY/d' .config
         #sed -i '/CONFIG_FIRMWARE_INCLUDE_NPC/d' .config
