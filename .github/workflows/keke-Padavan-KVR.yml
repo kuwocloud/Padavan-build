@@ -1,33 +1,21 @@
-#修改TNAME: K2P-5.0 中的K2P-5.0为你需要编译的型号，注意名称要与configs/templates/目录下的名字相同
-name: Build RM2100 keke-Padavan-KVR
+# 名称可以根据您的喜好修改
+name: (手动执行) Build Padavan for RM2100
 
-on:
+on: 
+  # 移除了所有自动触发器，只保留 workflow_dispatch
+  # 这将允许您在 GitHub Actions 页面手动触发此工作流
   workflow_dispatch:
-    inputs:
-      name:
-        description: "Build Padavan"
-        required: true
-        default: "build"
-  # release:
-  #   types: [published]
-  push:
-    tags:
-      - "v*"
-  #  branches: 
-  #    - master
-#  schedule:
-#    - cron: 0 8 * * 5
-  watch:
-    types: [started]
 
 jobs:
   build:
     runs-on: ubuntu-20.04
+    # 这个判断条件可以保留，确保只有仓库所有者能触发
     if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
     - name: Checkout
       uses: actions/checkout@main
+      
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
@@ -36,14 +24,17 @@ jobs:
         sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
         cpio git python-docutils gettext automake autopoint texinfo build-essential help2man \
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev gcc-multilib libssl-dev python
+        
     - name: Clone source code
       run: |
         git clone -b main --depth=1 https://github.com/kuwocloud/Padavan.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
+        
     - name: Build Firmware
       env:
+        # 您需要编译的型号，注意名称要与configs/templates/目录下的名字相同
         TNAME: RM2100
       run: |
         cd /opt/rt-n56u/trunk
@@ -114,7 +105,8 @@ jobs:
         sudo ./clear_tree
         sudo ./build_firmware_modify $TNAME 0
         sudo mv -f images/*.trx /opt/images/
-    - name : Upload packages
+        
+    - name: Upload packages
       uses: actions/upload-artifact@master
       if: always()
       with:
@@ -132,16 +124,19 @@ jobs:
       run: |
         echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M")"
         touch release.txt
-        [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
-        [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
+        # 这部分内容可能因为触发方式改变而出错，可以暂时注释或删除
+        # [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
+        # [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
         echo "::set-output name=status::success"
         
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
+      # 因为不是release事件触发，所以每次手动执行都会覆盖名为 "Padavan" 的 release
+      # 如果想每次都创建新的，可以把 tag_name 设置为动态的，例如 ${{ steps.tag.outputs.release_tag }}
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: Padavan
+        tag_name: Padavan # 每次手动构建都会更新这个tag的release
         body_path: release.txt
         files: /opt/images/*
