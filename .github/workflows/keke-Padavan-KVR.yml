@@ -25,7 +25,7 @@ jobs:
         # [已修复] 针对 Ubuntu 22.04 (ubuntu-latest) 修改了 Python 相关的包名
         sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
         cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
-        pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev gcc-multilib libssl-dev python-is-python3
+        pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev gcc-multilib libssl-dev python-is-python3 liblzma-dev
         
     - name: Clone source code
       run: |
@@ -45,8 +45,6 @@ jobs:
         # 您需要编译的型号，注意名称要与configs/templates/目录下的名字相同
         TNAME: RM2100
       run: |
-        # [已修复] 在编译工具链前，修补 mksquashfs 的 Makefile，为其添加 liblzma 的头文件搜索路径
-        sed -i 's/make -j4 -C squashfs-4.6.1/make -j4 -C squashfs-4.6.1 CFLAGS="-I..\/xz-5.4.3\/src\/liblzma\/api"/' /opt/rt-n56u/trunk/tools/mksquashfs_xz/Makefile
         cd /opt/rt-n56u/trunk
         if [ ! -f configs/templates/$TNAME.config ] ; then
         echo "configs/templates/$TNAME.config not found "
