@@ -1,4 +1,23 @@
-name: Build Padavan RM2100
+Skip to content
+kuwocloud
+Padavan-build
+Repository navigation
+Code
+Pull requests
+Actions
+Projects
+Wiki
+Security
+Insights
+Settings
+Build Padavan for RM2100 (Permissions Fixed)
+Build Padavan RM2100 #17
+All jobs
+Run details
+Workflow file for this run
+.github/workflows/keke-Padavan-KVR.yml at a65ebc6
+# 名称：(手动执行) Build Padavan for RM2100 (已修复权限)
+name: Build Padavan for RM2100 (Permissions Fixed)
 on:
   workflow_dispatch:
 # 关键修复：为整个工作流授予向仓库写入内容的权限
@@ -30,7 +49,7 @@ jobs:
         
     - name: Clone source code
       run: |
-        git clone -b main --depth=1 https://github.com/vb1980/Padavan-KVR.git /opt/rt-n56u
+        git clone -b main --depth=1 https://github.com/kuwocloud/Padavan.git /opt/rt-n56u
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
@@ -82,6 +101,7 @@ jobs:
         cp -f configs/templates/$m.config .config
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
         
+        # 4. 详细功能配置
         ################################################################################################
         #因不同型号配置功能不一样，所以先把配置项删除，如果你自己要添加其他的，也要写上删除这一条，切记！！！
         ################################################################################################
@@ -140,9 +160,11 @@ jobs:
         #sed -i '/自定义项/d' .config
         #echo "自定义项=y" >> .config
         #########################################################################################
+        
         sudo ./clear_tree
-        sudo ./build_firmware_modify $TNAME 0
+        sudo ./build_firmware_modify $m 0
         sudo mv -f images/*.trx /opt/images/
+        done
         
     - name: Upload packages
       uses: actions/upload-artifact@v4
