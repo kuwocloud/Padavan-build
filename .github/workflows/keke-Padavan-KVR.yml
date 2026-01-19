@@ -45,10 +45,24 @@ jobs:
       run: |
         cd /opt/rt-n56u/trunk
         # --- 所有源码定制化修改 ---
-        # --- [新增] 修复 ncurses 补丁问题 ---
-        echo "Attempting to fix ncurses patch issue by commenting out the patch command..."
-        sed -i 's/patch -p1 -d ncurses-6.4 < ncurses-6.4.patch/# patch -p1 -d ncurses-6.4 < ncurses-6.4.patch/g' /opt/rt-n56u/trunk/libs/libncurses/Makefile
-        echo "ncurses Makefile modified."
+        # --- [新增] 使用更可靠的方式修复 ncurses 补丁问题，并增加调试信息 ---
+        echo "--- Applying robust ncurses patch fix ---"
+        TARGET_MAKEFILE="/opt/rt-n56u/trunk/libs/libncurses/Makefile"
+        if [ -f "$TARGET_MAKEFILE" ]; then
+          echo "Found Makefile at: $TARGET_MAKEFILE"
+          echo "Content of Makefile before modification:"
+          grep 'ncurses-6.4.patch' "$TARGET_MAKEFILE" || echo "Patch line not found before modification."
+          
+          # 使用更通用的方法注释掉 patch 这一行：查找包含'ncurses-6.4.patch'的行，并在行首添加'#'
+          sed -i "/ncurses-6.4.patch/s/^/#/" "$TARGET_MAKEFILE"
+          
+          echo "Content of Makefile after modification:"
+          grep 'ncurses-6.4.patch' "$TARGET_MAKEFILE" || echo "Patch line not found after modification (This is expected)."
+        else
+          echo "ERROR: $TARGET_MAKEFILE not found!"
+          exit 1
+        fi
+        echo "--- ncurses patch fix applied ---"
         # 1. [新增] 修改默认LAN IP地址
         echo "Modifying default LAN IP to $LAN_IP"
         OLD_SUBNET="192.168.2" # 源码中的默认网段
