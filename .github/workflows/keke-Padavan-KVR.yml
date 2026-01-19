@@ -1,5 +1,4 @@
-# 名称：(手动执行) Build Padavan for RM2100 (已修复权限)
-name: Build Padavan for RM2100 (Permissions Fixed)
+name: Build Padavan RM2100
 on:
   workflow_dispatch:
 # 关键修复：为整个工作流授予向仓库写入内容的权限
@@ -35,7 +34,6 @@ jobs:
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
-
     - uses: actions/setup-go@main
       with:
           go-version: '1.23'
@@ -45,9 +43,7 @@ jobs:
     - name: Build Firmware
       run: |
         cd /opt/rt-n56u/trunk
-
         # --- 所有源码定制化修改 ---
-
         # 1. [新增] 修改默认LAN IP地址
         echo "Modifying default LAN IP to $LAN_IP"
         OLD_SUBNET="192.168.2" # 源码中的默认网段
@@ -62,7 +58,6 @@ jobs:
           fi
           echo "Default IP modification completed."
         fi
-
         # 2. CPU 超频设置
         echo "CPU超频到$MHZ"mhz
         clock=`echo "obase=16 ; ibase=10 ; (((($MHZ/20)-1)*16+2))" | bc`
@@ -77,17 +72,16 @@ jobs:
         sed -i 's/size_tmp="24M"/size_tmp="60M"/g' /opt/rt-n56u/trunk/user/scripts/dev_init.sh
         sed -i 's/mtd_part_size=65536/mtd_part_size=83886080/g' /opt/rt-n56u/trunk/user/scripts/mtd_storage.sh
         echo "Storage modification completed."
-
         # --- 定制化逻辑结束 ---
-
         for m in $TNAME;
         do
-        if [ ! -f configs/templates/$TNAME.config ] ; then
-        echo "configs/templates/$TNAME.config not found "
-        exit 1
+        if [ ! -f configs/templates/$m.config ] ; then
+        echo "configs/templates/$m.config not found "
+        exit 0
         fi
-        cp -f configs/templates/$TNAME.config .config
+        cp -f configs/templates/$m.config .config
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
+        
         ################################################################################################
         #因不同型号配置功能不一样，所以先把配置项删除，如果你自己要添加其他的，也要写上删除这一条，切记！！！
         ################################################################################################
@@ -151,7 +145,6 @@ jobs:
         sudo mv -f images/*.trx /opt/images/
         
     - name: Upload packages
-      # [已优化] 使用 @v4 替代 @master，是更稳定和安全的做法
       uses: actions/upload-artifact@v4
       if: always()
       with:
@@ -173,12 +166,10 @@ jobs:
         
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
-      # 因为不是release事件触发，所以每次手动执行都会覆盖名为 "Padavan" 的 release
-      # 如果想每次都创建新的，可以把 tag_name 设置为动态的，例如 ${{ steps.tag.outputs.release_tag }}
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: Padavan # 每次手动构建都会更新这个tag的release
+        tag_name: Padavan
         body_path: release.txt
-        files: /opt/images/*   
+        files: /opt/images/*
