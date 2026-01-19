@@ -45,6 +45,8 @@ jobs:
         # 您需要编译的型号，注意名称要与configs/templates/目录下的名字相同
         TNAME: RM2100
       run: |
+        # [已修复] 在编译工具链前，修补 mksquashfs 的 Makefile，为其添加 liblzma 的头文件搜索路径
+        sed -i 's/make -j4 -C squashfs-4.6.1/make -j4 -C squashfs-4.6.1 CFLAGS="-I..\/xz-5.4.3\/src\/liblzma\/api"/' /opt/rt-n56u/trunk/tools/mksquashfs_xz/Makefile
         cd /opt/rt-n56u/trunk
         if [ ! -f configs/templates/$TNAME.config ] ; then
         echo "configs/templates/$TNAME.config not found "
