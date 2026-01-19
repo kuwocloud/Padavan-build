@@ -45,6 +45,10 @@ jobs:
         # 您需要编译的型号，注意名称要与configs/templates/目录下的名字相同
         TNAME: RM2100
       run: |
+        # [关键修复] 降级 Xray-core 到 v1.6.5，以避免新版依赖 (gvisor) 在 mipsle 架构上的编译错误
+        # 这是一个已知的问题，此修复可以确保编译顺利进行
+        sed -i 's/1.7.5/1.6.5/g' /opt/rt-n56u/trunk/user/xray/Makefile
+
         cd /opt/rt-n56u/trunk
         if [ ! -f configs/templates/$TNAME.config ] ; then
         echo "configs/templates/$TNAME.config not found "
