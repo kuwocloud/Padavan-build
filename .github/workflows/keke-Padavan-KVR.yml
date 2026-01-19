@@ -1,9 +1,10 @@
-# 名称：(手动执行) Build Padavan for RM2100 (含IP定制和完整注释)
-name: Build Padavan for RM2100 (Full Custom with Comments)
-
+# 名称：(手动执行) Build Padavan for RM2100 (已修复权限)
+name: Build Padavan for RM2100 (Permissions Fixed)
 on:
   workflow_dispatch:
-
+# 关键修复：为整个工作流授予向仓库写入内容的权限
+permissions:
+  contents: write
 env:
   # 您可以在这里修改所有编译参数
   TNAME: RM2100          # 编译的型号
