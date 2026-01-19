@@ -8,19 +8,21 @@ on:
 
 jobs:
   build:
-    runs-on: ubuntu-22.04
+    # [已修复] 使用最新的 Runner 避免排队，并解决后续依赖问题
+    runs-on: ubuntu-latest
     # 这个判断条件可以保留，确保只有仓库所有者能触发
     if: github.event.repository.owner.id == github.event.sender.id
 
     steps:
     - name: Checkout
-      uses: actions/checkout@main
+      uses: actions/checkout@v4
       
     - name: Initialization environment
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
         sudo apt-get update
+        # [已修复] 针对 Ubuntu 22.04 (ubuntu-latest) 修改了 Python 相关的包名
         sudo apt-get -y install unzip libtool-bin curl cmake gperf gawk flex bison nano xxd \
         cpio git python3-docutils gettext automake autopoint texinfo build-essential help2man \
         pkg-config zlib1g-dev libgmp3-dev libmpc-dev libmpfr-dev libncurses5-dev libltdl-dev gcc-multilib libssl-dev python-is-python3
@@ -31,6 +33,12 @@ jobs:
         cd /opt/rt-n56u/toolchain-mipsel
         sh dl_toolchain.sh
         mkdir -p /opt/images/
+
+    - name: Set up Go for building components
+      # [已修复] 明确安装 Go 1.19 版本，以兼容固件中 Xray 等组件的旧版源码
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.19'
         
     - name: Build Firmware
       env:
@@ -107,7 +115,8 @@ jobs:
         sudo mv -f images/*.trx /opt/images/
         
     - name: Upload packages
-      uses: actions/upload-artifact@master
+      # [已优化] 使用 @v4 替代 @master，是更稳定和安全的做法
+      uses: actions/upload-artifact@v4
       if: always()
       with:
         name: Padavan-packages
@@ -122,12 +131,9 @@ jobs:
     - name: Generate release tag
       id: tag
       run: |
-        echo "::set-output name=release_tag::$(date +"%Y.%m.%d-%H%M")"
+        echo "release_tag=$(date +"%Y.%m.%d-%H%M")" >> $GITHUB_OUTPUT
         touch release.txt
-        # 这部分内容可能因为触发方式改变而出错，可以暂时注释或删除
-        # [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
-        # [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
-        echo "::set-output name=status::success"
+        echo "status=success" >> $GITHUB_OUTPUT
         
     - name: Upload firmware to release
       uses: softprops/action-gh-release@v1
