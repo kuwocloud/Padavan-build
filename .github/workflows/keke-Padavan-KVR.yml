@@ -1,5 +1,5 @@
-# 名称：(手动执行) Build Padavan for RM2100 (含IP定制)
-name: Build Padavan for RM2100 (Full Custom)
+# 名称：(手动执行) Build Padavan for RM2100 (含IP定制和完整注释)
+name: Build Padavan for RM2100 (Full Custom with Comments)
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ env:
   # 您可以在这里修改所有编译参数
   TNAME: RM2100          # 编译的型号
   MHZ: 1100              # CPU超频频率, 必须为20的倍数
-  LAN_IP: 192.168.9.1    # [新增] 自定义固件的默认内网IP地址
+  LAN_IP: 192.168.9.1    # 自定义固件的默认内网IP地址
 
 jobs:
   build:
@@ -35,11 +35,10 @@ jobs:
         sh dl_toolchain.sh
         mkdir -p /opt/images/
 
-    - uses: actions/setup-go@main
+    - name: Set up Go for building components
+      uses: actions/setup-go@v5
       with:
-          go-version: '1.23'
-          check-latest: true
-          cache: false
+        go-version: '1.19'
         
     - name: Build Firmware
       run: |
@@ -47,7 +46,7 @@ jobs:
 
         # --- 所有源码定制化修改 ---
 
-        # 1. [新增] 修改默认LAN IP地址
+        # 1. 修改默认LAN IP地址
         echo "Modifying default LAN IP to $LAN_IP"
         OLD_SUBNET="192.168.2" # 源码中的默认网段
         NEW_SUBNET=$(echo $LAN_IP | cut -d. -f1-3)
@@ -55,7 +54,6 @@ jobs:
           sed -i "s/$OLD_SUBNET./$NEW_SUBNET./g" /opt/rt-n56u/trunk/user/shared/defaults.h
           sed -i "s/$OLD_SUBNET./$NEW_SUBNET./g" /opt/rt-n56u/trunk/user/www/n56u_ribbon_fixed/validator.js
           sed -i "s/$OLD_SUBNET./$NEW_SUBNET./g" /opt/rt-n56u/trunk/user/www/n56u_ribbon_fixed/Advanced_SettingBackup_Content.asp
-          # 检查dict目录是否存在，以增加脚本健壮性
           if [ -d "/opt/rt-n56u/trunk/user/www/dict" ]; then
              sed -i "s/$OLD_SUBNET./$NEW_SUBNET./g" /opt/rt-n56u/trunk/user/www/dict/*
           fi
@@ -88,84 +86,141 @@ jobs:
         cp -f configs/templates/$m.config .config
         sed -i 's/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=n/CONFIG_FIRMWARE_INCLUDE_OPENSSL_EXE=y/g' .config
         
-        # 4. 详细功能配置
-        ############################################################################################
-        # 先清除所有可能冲突的旧配置
-        ############################################################################################
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_MENTOHUST/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_SERVER/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CLIENT/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SOFTETHERVPN_CMD/d' .config
+        # 4. 详细功能配置 (已恢复您的完整中文注释)
+        ###  清除默认配置###
+        sed -i '/CONFIG_FIRMWARE_ENABLE_IPV6/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_QOS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TCPDUMP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FTPD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_XUPNPD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MINIDLNA/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FIREFLY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TRANSMISSION/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ARIA/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DOGCOM/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MINIEAP/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NAPT66/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_SSSERVER/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_ADBYBY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_VLMCSD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TTYD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_MENTOHUST/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPC/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_FRPS/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_TUNSAFE/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_WIREGUARD/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ZEROTIER/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_ALIDDNS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMARTDNS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SRELAY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_KUMASOCKS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_UUPLUGIN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_V2RAYA/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_LUCKY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_CLOUDFLARED/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_WXSEND/d' .config
-        sed -i '/CONFIG_FIRMWARE_CPU_900MHZ/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_QOS/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SQM/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SSOBFS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_V2RAY/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_XRAY/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_TROJAN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_KOOLPROXY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMARTDNSBIN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_CADDY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_CADDYBIN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_WYY/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_WYYBIN/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_ZEROTIER/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_DDNSTO/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_WIREGUARD/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_ALDRIVER/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SSOBFS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_V2RAYA/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_3PROXY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_REDSOCKS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_WING/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_XTUN/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_N2N/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NETCAT/d' .config
         sed -i '/CONFIG_FIRMWARE_INCLUDE_MSD_LITE/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_IPERF3/d' .config
-        sed -i '/CONFIG_FIRMWARE_INCLUDE_NAPT66/d' .config
-        ######################################################################
-        # 再写入你需要的最终配置
-        ######################################################################
-        echo "CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_SSSERVER=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_DNSFORWARDER=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_TUNSAFE=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_SRELAY=n" >> .config
-        echo "CONFIG_FIRMWARE_CPU_900MHZ=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_QOS=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_SQM=n" >> .config
-        ##科学上网## 
-        echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_XRAY=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_TROJAN=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_KUMASOCKS=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_V2RAYA=n" >> .config
-        ##DNS服务##
-        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNSBIN=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=y" >> .config
-        ##内网穿透服务##
-        echo "CONFIG_FIRMWARE_INCLUDE_ZEROTIER=n" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_FRPC=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_FRPS=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_LUCKY=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARED=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_WXSEND=y" >> .config
-        echo "CONFIG_FIRMWARE_INCLUDE_UUPLUGIN=y" >> .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_WYY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_KOOLPROXY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ADBYBY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NVPPROXY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_DDNSTO/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_TAILSCALE/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_NATPIERCE/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_VNTCLI/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_VNTS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_CLOUDFLARED/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_LUCKY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_CLOUDFLARE/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_EASYTIER/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ALIST/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_WXSEND/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_UUPLUGIN/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ALDRIVER/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_BAFA/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_CADDY/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_SMARTDNS/d' .config
+        sed -i '/CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME/d' .config
+        sed -i '/CONFIG_FIRMWARE_CPU_900MHZ/d' .config
+        ### 写入新配置 ###
+        ##系统组件配置##
+        echo "CONFIG_FIRMWARE_ENABLE_IPV6=y" >> .config # IPv6 协议支持
+        echo "CONFIG_FIRMWARE_INCLUDE_TCPDUMP=n" >> .config # tcpdump网络抓包分析工具
+        echo "CONFIG_FIRMWARE_INCLUDE_FTPD=n" >> .config # FTP文件传输服务器（vsftpd）
+        echo "CONFIG_FIRMWARE_INCLUDE_XUPNPD=y" >> .config # xUPNPd IPTV媒体服务器（UPnP/DLNA代理）
+        echo "CONFIG_FIRMWARE_INCLUDE_MINIDLNA=n" >> .config # MiniDLNA UPnP媒体服务器（DLNA共享视频/音乐到智能电视）
+        echo "CONFIG_FIRMWARE_INCLUDE_FIREFLY=n" >> .config # Firefly iTunes媒体服务器
+        echo "CONFIG_FIRMWARE_INCLUDE_FFMPEG_NEW=n" >> .config # ffmpeg
+        echo "CONFIG_FIRMWARE_CPU_900MHZ=y" >> .config # MT7621 CPU超频到900MHz（覆盖Uboot设置）
+        echo "CONFIG_FIRMWARE_INCLUDE_TRANSMISSION=n" >> .config # Transmission BitTorrent种子下载工具
+        echo "CONFIG_FIRMWARE_INCLUDE_TRANSMISSION_WEB_CONTROL=n" >> .config # Transmission-Web-Control（高级WebUI）
+        echo "CONFIG_FIRMWARE_INCLUDE_QOS=n" >> .config # QoS网络QoS调度模块（流量优先级控制）
+        echo "CONFIG_FIRMWARE_INCLUDE_ARIA=n" >> .config # Aria2下载管理器（多协议下载）
+        echo "CONFIG_FIRMWARE_INCLUDE_ARIA_WEB_CONTROL=n" >> .config # Aria2 WEB控制界面
+        echo "CONFIG_FIRMWARE_INCLUDE_SCUTCLIENT=n" >> .config # 华南理工大学校园网认证客户端
+        ##校园网认证工具##
+        echo "CONFIG_FIRMWARE_INCLUDE_GDUT_DRCOM=n" >> .config # 广东工业大学Dr.COM认证客户端
+        echo "CONFIG_FIRMWARE_INCLUDE_DOGCOM=n" >> .config # 通用Dr.COM认证客户端（哆点校园认证）
+        echo "CONFIG_FIRMWARE_INCLUDE_MINIEAP=n" >> .config # 通用802.1X认证客户端（锐捷认证）
+        echo "CONFIG_FIRMWARE_INCLUDE_NJIT_CLIENT=n" >> .config # 南京工程学院校园网认证客户端
+        echo "CONFIG_FIRMWARE_INCLUDE_NAPT66=n" >> .config # IPv6 NAT（网络地址转换）
+        echo "CONFIG_FIRMWARE_INCLUDE_SSSERVER=n" >> .config # Shadowsocks服务器端
+        echo "CONFIG_FIRMWARE_INCLUDE_VLMCSD=n" >> .config # Windows/Office KMS激活服务器
+        echo "CONFIG_FIRMWARE_INCLUDE_TTYD=y" >> .config # 基于Web的SSH终端
+        echo "CONFIG_FIRMWARE_INCLUDE_MENTOHUST=n" >> .config # 锐捷校园网认证客户端
+        ##内网穿透##
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPC=y" >> .config # FRP内网穿透工具客户端（访问内网设备）
+        echo "CONFIG_FIRMWARE_INCLUDE_FRPS=y" >> .config # FRP内网穿透工具服务端（提供内网穿透服务）
+        echo "CONFIG_FIRMWARE_INCLUDE_WIREGUARD=n" >> .config # WireGuard现代高性能VPN协议
+        echo "CONFIG_FIRMWARE_INCLUDE_TUNSAFE=n" >> .config # TunSafe WireGuard的TCP实现版本
+        echo "CONFIG_FIRMWARE_INCLUDE_ZEROTIER=y" >> .config # ZeroTier P2P VPN异地组网（虚拟局域网）
+        echo "CONFIG_FIRMWARE_INCLUDE_ALIDDNS=n" >> .config # 阿里云DDNS 动态域名解析
+        echo "CONFIG_FIRMWARE_INCLUDE_DDNSTO=n" >> .config # DDNSTO内网穿透服务
+        echo "CONFIG_FIRMWARE_INCLUDE_TAILSCALE=n" >> .config # Tailscale企业级异地组网VPN（基于WireGuard）
+        echo "CONFIG_FIRMWARE_INCLUDE_NATPIERCE=n" >> .config # 皎月连 NAT穿透工具
+        echo "CONFIG_FIRMWARE_INCLUDE_VNTCLI=n" >> .config # VNT虚拟组网客户端 
+        echo "CONFIG_FIRMWARE_INCLUDE_VNTS=n" >> .config # VNT虚拟组网服务端
+        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARED=y" >> .config # Cloudflare隧道客户端
+        echo "CONFIG_FIRMWARE_INCLUDE_LUCKY=y" >> .config # Lucky多功能工具箱（反代、DDNS、端口转发等）
+        echo "CONFIG_FIRMWARE_INCLUDE_CLOUDFLARE=y" >> .config # Cloudflare动态域名解析
+        echo "CONFIG_FIRMWARE_INCLUDE_EASYTIER=n" >> .config # EasyTier轻量级异地组网工具
+        echo "CONFIG_FIRMWARE_INCLUDE_ALIST=n" >> .config # Alist网盘文件列表程序（聚合多个网盘）
+        echo "CONFIG_FIRMWARE_INCLUDE_WXSEND=y" >> .config # WxSend微信消息推送工具
+        echo "CONFIG_FIRMWARE_INCLUDE_UUPLUGIN=n" >> .config # 网易UU游戏加速器
+        echo "CONFIG_FIRMWARE_INCLUDE_ALDRIVER=n" >> .config # 阿里云盘WebDAV服务
+        echo "CONFIG_FIRMWARE_INCLUDE_WYY=n" >> .config # 网易云音乐解锁
+        echo "CONFIG_FIRMWARE_INCLUDE_BAFA=n" >> .config # 巴法云IoT云平台客户端
+        echo "CONFIG_FIRMWARE_INCLUDE_CADDY=n" >> .config # Caddy现代化Web服务器（在线文件管理）
+        echo "CONFIG_FIRMWARE_INCLUDE_SMARTDNS=y" >> .config # SmartDNS智能DNS服务器（防污染、去广告）
+        echo "CONFIG_FIRMWARE_INCLUDE_ADGUARDHOME=n" >> .config # AdGuardHome广告拦截DNS服务器（网络级广告拦截）
+        echo "CONFIG_FIRMWARE_INCLUDE_NETCAT=n" >> .config # Netcat网络调试工具（TCP/UDP工具）
+        echo "CONFIG_FIRMWARE_INCLUDE_MSD_LITE=y" >> .config # MSD Lite组播转单播工具（IPTV，与udpxy互斥）
+        ##科学上网插件配置##
+        echo "CONFIG_FIRMWARE_INCLUDE_SHADOWSOCKS=y" >> .config # Shadowsocks轻量级代理工具（科学上网）
+        echo "CONFIG_FIRMWARE_INCLUDE_V2RAY=n" >> .config # V2Ray多协议代理平台，无需集成会在线下载
+        echo "CONFIG_FIRMWARE_INCLUDE_XRAY=y" >> .config # Xray V2Ray的超集，性能更好
+        echo "CONFIG_FIRMWARE_INCLUDE_TROJAN=y" >> .config # Trojan Trojan代理协议，无需集成会在线下载
+        echo "CONFIG_FIRMWARE_INCLUDE_SSOBFS=n" >> .config # Simple-obfs简单混淆插件，用于Shadowsocks流量混淆
+        echo "CONFIG_FIRMWARE_INCLUDE_V2RAYA=n" >> .config # V2RayA V2Ray的Web图形化管理面
+        echo "CONFIG_FIRMWARE_INCLUDE_REDSOCKS=y" >> .config # RedSocks透明代理工具，将TCP连接转为SOCKS代理
+        echo "CONFIG_FIRMWARE_INCLUDE_WING=n" >> .config # Wing代理工具
+        echo "CONFIG_FIRMWARE_INCLUDE_XTUN=n" >> .config # xTun安全隧道工具
+        echo "CONFIG_FIRMWARE_INCLUDE_3PROXY=n" >> .config # 3proxy轻量级代理服务器
+        echo "CONFIG_FIRMWARE_INCLUDE_N2N=n" >> .config # N2N P2P VPN异地组网工具
+        echo "CONFIG_FIRMWARE_INCLUDE_KOOLPROXY=n" >> .config # KoolProxy网页广告过滤工具
+        echo "CONFIG_FIRMWARE_INCLUDE_ADBYBY=n" >> .config # AdByby广告过滤工具
+        echo "CONFIG_FIRMWARE_INCLUDE_NVPPROXY=n" >> .config # NVPPROXY代理工具
+        echo "CONFIG_FIRMWARE_INCLUDE_VIRTUALHERE=n" >> .config # VirtualHereUSB设备网络共享
         
         sudo ./clear_tree
         sudo ./build_firmware_modify $m 0
